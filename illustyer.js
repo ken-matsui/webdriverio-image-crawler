@@ -68,24 +68,12 @@ async function getElement() {
 	return ary;
 }
 
-async function loop(image_num) {
-	let kaesu = []
-	while (image_num > kaesu.length) {
-		const result = await getElement();
-		Array.prototype.push.apply(kaesu, result);
-		// 重複の排除
-		kaesu = Array.from(new Set(kaesu));
-	}
-	client.end();
-	return kaesu;
-}
-
 function doRequest(url, output_dir) {
 	return new Promise((resolve_, reject_) => {
-		headers = { method: 'GET', url: url, encoding: null };
+		const headers = { method: 'GET', url: url, encoding: null };
 		request(headers, (err_, res_, body_) => {
 			if (!err_ && res_.statusCode === 200) {
-				filename = path.join(output_dir, url.split('/').pop());
+				const filename = path.join(output_dir, url.split('/').pop());
 				fs.writeFileSync(filename, body_, 'binary');
 				resolve_();
 			} else {
@@ -94,16 +82,30 @@ function doRequest(url, output_dir) {
 		});
 	});
 }
-
+// 謎のエラータイミングに規則性はない．
+// 1回目にエラーが起きた枚数を超えてもなにも起っていない．
+// doRequest 関数は関係ない．なぜならば，前のアルゴリズムでは，
+//  枚数分URLが集まるまで，doRequestしなかったからである．
+/*
+Capabilities are: Capabilities {browserName: chrome, handlesAlerts: true, javascriptEnabled: true, locationContextEnabled: true, loggingPrefs: org.openqa.selenium.logging..., requestOrigins: {name: webdriverio, url: http://webdriver.io, version: 4.9.11}, rotatable: true}
+05:32:15.465 INFO - Capabilities {browserName: chrome, handlesAlerts: true, javascriptEnabled: true, locationContextEnabled: true, loggingPrefs: org.openqa.selenium.logging..., requestOrigins: {name: webdriverio, url: http://webdriver.io, version: 4.9.11}, rotatable: true} matched class org.openqa.selenium.remote.server.ServicedSession$Factory (provider: org.openqa.selenium.chrome.ChromeDriverService)
+*/
 async function downloadImages(image_num, output_dir) {
-	const result = await loop(image_num);
-
 	if (!fs.existsSync(output_dir))
 		fs.mkdirSync(output_dir);
 
-	for (const url of result) {
-		await doRequest(url, output_dir);
+	let kaesu = []
+	while (image_num > kaesu.length) {
+		const result = await getElement();
+		Array.prototype.push.apply(kaesu, result);
+		// 重複の排除
+		kaesu = Array.from(new Set(kaesu));
+		for (const url of result) {
+			doRequest(url, output_dir);
+		}
 	}
+	client.end();
+	return;
 }
 
 if (process.argv.length != 3) {
