@@ -62,8 +62,13 @@ async function getElement() {
 	console.log('Download "' + name + '".');
 
 	const imgs = await client.elements('img[border="0"]');
+	await client.pause(2000);
+
 	const ary = await catchSrc(imgs["value"]);
+	await client.pause(2000);
+
 	await client.click('a[href="#random"]');
+	await client.pause(2000);
 
 	return ary;
 }
@@ -82,14 +87,12 @@ function doRequest(url, output_dir) {
 		});
 	});
 }
-// 謎のエラータイミングに規則性はない．
-// 1回目にエラーが起きた枚数を超えてもなにも起っていない．
-// doRequest 関数は関係ない．なぜならば，前のアルゴリズムでは，
-//  枚数分URLが集まるまで，doRequestしなかったからである．
-/*
-Capabilities are: Capabilities {browserName: chrome, handlesAlerts: true, javascriptEnabled: true, locationContextEnabled: true, loggingPrefs: org.openqa.selenium.logging..., requestOrigins: {name: webdriverio, url: http://webdriver.io, version: 4.9.11}, rotatable: true}
-05:32:15.465 INFO - Capabilities {browserName: chrome, handlesAlerts: true, javascriptEnabled: true, locationContextEnabled: true, loggingPrefs: org.openqa.selenium.logging..., requestOrigins: {name: webdriverio, url: http://webdriver.io, version: 4.9.11}, rotatable: true} matched class org.openqa.selenium.remote.server.ServicedSession$Factory (provider: org.openqa.selenium.chrome.ChromeDriverService)
-*/
+
+// {"message":"stale element reference: element is not attached to the page document\n}
+// randomボタンが表示されない．Lastの時
+// 画像が表示されない．静的ホスティングエラー．
+// これらが，異常終了を引き起こす．
+
 async function downloadImages(image_num, output_dir) {
 	if (!fs.existsSync(output_dir))
 		fs.mkdirSync(output_dir);
